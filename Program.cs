@@ -189,7 +189,9 @@ namespace DiscImage.EbsDiscTest {
 
                                     List<string> entries = new List<string>();
                                     List<string> dirs = new List<string>();
-                                    dirs.Add("");
+                                    string[] parts = path.Split(':');
+                                    string fpath = parts[parts.Length - 1];
+                                    dirs.Add(fpath);
 
                                     while (dirs.Count > 0) {
                                         if (dirs.First() == "" || (fileSystem.Exists(dirs.First()) && (fileSystem.GetAttributes(dirs.First()) & FileAttributes.Directory) == FileAttributes.Directory)) {
