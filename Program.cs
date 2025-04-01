@@ -176,34 +176,42 @@ namespace DiscImage.EbsDiscTest {
                         }
                     } else if (command == "file_list") {
                         foreach (var volume in VolumeManager.GetLogicalVolumes()) {
-                            using (var sparseStream = volume.Open()) {
-                                var fsInfo = FileSystemManager.DetectFileSystems(sparseStream);
+                            if (path.Contains(volume.Identity.ToString())) {
+                                using (var sparseStream = volume.Open()) {
+                                    var fsInfo = FileSystemManager.DetectFileSystems(sparseStream);
 
-                                if (fsInfo != null && fsInfo.Count > 0) {
-                                    DiscFileSystem fileSystem = fsInfo[0].Open(sparseStream);
+                                    if (fsInfo != null && fsInfo.Count > 0) {
+                                        DiscFileSystem fileSystem = fsInfo[0].Open(sparseStream);
 
-                                    if (fileSystem is NtfsFileSystem) {
-                                        ((NtfsFileSystem)fileSystem).NtfsOptions.HideHiddenFiles = false;
-                                        ((NtfsFileSystem)fileSystem).NtfsOptions.HideSystemFiles = false;
-                                    }
+                                        if (fileSystem is NtfsFileSystem) {
+                                            ((NtfsFileSystem)fileSystem).NtfsOptions.HideHiddenFiles = false;
+                                            ((NtfsFileSystem)fileSystem).NtfsOptions.HideSystemFiles = false;
+                                        }
 
-                                    List<string> entries = new List<string>();
-                                    List<string> dirs = new List<string>();
-                                    string[] parts = path.Split(':');
-                                    string fpath = parts[parts.Length - 1];
-                                    dirs.Add(fpath);
-
-                                    while (dirs.Count > 0) {
-                                        if (dirs.First() == "" || (fileSystem.Exists(dirs.First()) && (fileSystem.GetAttributes(dirs.First()) & FileAttributes.Directory) == FileAttributes.Directory)) {
-                                            entries = fileSystem.GetFileSystemEntries(dirs.First()).ToList();
-                                            dirs.RemoveAt(0);
-                                            dirs.InsertRange(0, entries);
-
-                                            foreach (string f in entries) {
-                                                Console.WriteLine($"{volume.Identity}:{f}");
-                                            }
+                                        List<string> entries = new List<string>();
+                                        List<string> dirs = new List<string>();
+                                        // retrieve path to find
+                                        string fpath = path.Replace(volume.Identity.ToString() + ":", "");
+                                        if (fpath.Contains(volume.Identity.ToString())) {
+                                            // if it's root of the disk
+                                            dirs.Add("");
                                         } else {
-                                            dirs.RemoveAt(0);
+                                            // set the path
+                                            dirs.Add(fpath);
+                                        }
+
+                                        while (dirs.Count > 0) {
+                                            if (dirs.First() == "" || (fileSystem.Exists(dirs.First()) && (fileSystem.GetAttributes(dirs.First()) & FileAttributes.Directory) == FileAttributes.Directory)) {
+                                                entries = fileSystem.GetFileSystemEntries(dirs.First()).ToList();
+                                                dirs.RemoveAt(0);
+                                                dirs.InsertRange(0, entries);
+
+                                                foreach (string f in entries) {
+                                                    Console.WriteLine($"{volume.Identity}:{f}");
+                                                }
+                                            } else {
+                                                dirs.RemoveAt(0);
+                                            }
                                         }
                                     }
                                 }
