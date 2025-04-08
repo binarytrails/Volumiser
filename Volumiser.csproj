@@ -2,11 +2,10 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.EBS" Version="3.7.100.9" />
     <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.100.4" />
     <PackageReference Include="dnMerge" Version="0.5.15">
       <PrivateAssets>all</PrivateAssets>

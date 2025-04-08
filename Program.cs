@@ -1,7 +1,6 @@
 ﻿using Amazon.Runtime;
 using Amazon.Runtime.CredentialManagement;
 using DiscUtils;
-using DiscUtils.Ebs;
 using DiscUtils.Setup;
 using DiscUtils.Streams;
 using DiscUtils.Ntfs;
@@ -29,24 +28,6 @@ namespace DiscImage.EbsDiscTest {
         static Task DownloadTask;
 
         static string PathSeparator;
-
-
-        static VirtualDisk GetEBSDiskImage(string snapshotId, string profile, string awsAccessKey, string awsSecret, string region) {
-
-            AWSCredentials credentials = null;
-
-            if(profile != null) {
-                var chain = new CredentialProfileStoreChain();
-                if (!chain.TryGetAWSCredentials(profile, out credentials)) {
-                    throw new ArgumentException($"[!] Failed to find profile with name {profile}");
-                }              
-            }else if(awsAccessKey != null) {
-                credentials = new BasicAWSCredentials(awsAccessKey, awsSecret);
-            }
-
-            var result = new Disk(snapshotId, region, credentials);
-            return result;
-        }
 
         static VirtualDisk GetLocalDiskImage(string path) {
             return VirtualDisk.OpenDisk(path, FileAccess.Read);
@@ -101,16 +82,12 @@ namespace DiscImage.EbsDiscTest {
 
             DiscUtils.Containers.SetupHelper.SetupContainers();
             DiscUtils.FileSystems.SetupHelper.SetupFileSystems(); 
-            SetupHelper.RegisterAssembly(typeof(DiskImageFile).Assembly);
     
             VirtualDisk disk;
 
             try {
 
-                if (image.StartsWith("ebs://")) {
-                    disk = GetEBSDiskImage(image.Substring(6), profile, awsAccessKey, awsAccessSecret, awsRegion);
-                    var ebsDisk = (Disk)disk;
-                } else if (image.StartsWith(@"\\.\")) {
+                if (image.StartsWith(@"\\.\")) {
                     disk = new DiscUtils.RawDisk.Disk(image);
                 } else {
                     disk = GetLocalDiskImage(image);
